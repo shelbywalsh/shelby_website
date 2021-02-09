@@ -1,0 +1,22 @@
+---
+title: "Welcome"
+description: |
+  First post but not sure what I want to put.
+author:
+  - name: Shelby Walsh
+date: 02-09-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Distill is a publication format for scientific and technical writing, native to the web.
+
+Learn more about using Distill at <https://rstudio.github.io/distill>.
+
+

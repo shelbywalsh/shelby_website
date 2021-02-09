@@ -1,5 +1,5 @@
 ---
-title: "About this site"
+title: "About Me"
 description: |
   Some additional details about the website
 ---
@@ -7,4 +7,12 @@ description: |
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
+
+## Personal Background: 
+My name is Shelby Walsh 
+
+
+## Professional Interest:
+
+## Portfolio Examples:
 

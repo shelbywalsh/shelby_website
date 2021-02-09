@@ -1,0 +1,4 @@
+---
+title: "The Blog"  
+listing: posts 
+---

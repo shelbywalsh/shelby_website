@@ -1,0 +1,66 @@
+---
+title: CV
+name: Shelby
+surname: Walsh
+position: "Graduate Student"
+address: "Goleta, CA, USA"
+phone: +1 661 803 2471
+email: "swalsh@bren.ucsb.edu"
+github: shelbywalsh
+linkedin: Shelby Walsh
+date: "`r format(Sys.time(), '%B %Y')`"
+aboutme: "Shelby is a 2nd year graduate student at the Bren School of Environmental Science & Management."
+output: 
+  vitae::markdowncv
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(vitae)
+library(tidyverse)
+```
+
+### Education
+
+```{r}
+library(tibble)
+tribble(
+  ~ Degree, ~ Year, ~ Institution, ~ Where,
+  "Bren School of Environmental Science & Management, UC Santa Barbara", "2019-2021", "Santa Barbara, CA", "Masters of Environental Science & Management",
+  "University of Portland", "2012-2016", "Portland, OR", "Bachelor of Science, Environmental Science"
+) %>% 
+  detailed_entries(Degree, Year, Institution, Where)
+```
+
+### Master's Group Project
+
+```{r}
+tribble(
+  ~ Degree, ~ Year, ~ Institution, ~ Where,
+  "Designed a complete Carbon footprint for NADA Grocery, including Scopes 1, 2, and 3, for 2019 and 2020, Role: Data manager", "2020-2021", "Client: Nada Grocery", "Quantifying the Carbon Footprint of a Zero Waste Grocery Store",
+) %>%
+  detailed_entries(Degree, Year, Institution, Where)
+```
+
+### Professional Experience
+
+```{r}
+library(tibble)
+tribble(
+  ~ Degree, ~ Year, ~ Institution, ~ Where,
+  "UCSB, Geography Department", "09/20 - current", "Santa Barbara, CA", "Teaching Assistant,",
+  "Nada Grocery", "06/20 - 09/20", "Vancouver, BC", "B-Corporation Impact Intern,",
+  "REI Co-op", "03/18 - 12/19", "Santa Monica & Santa Barbara, CA", "Retail Specialist,",
+  "The Boys & Girls Clubs of Venice", "03/18 - 11/18", "Venice, CA", "Resource Development Assistant,",
+  "Naturalists at Large", "08/17 - 11/18", "Ventura, CA", "Naturalist,",
+  "AmeriCoprs: Mountains to Sound Greenway Trust", "10/16 - 08/17", "Seattle, WA", "Restoration Aide,",
+) %>% 
+  detailed_entries(Degree, Year, Institution, Where)
+```
+
+
+### Skills
+
+ * **Comms:** Microsoft (Excel, PowerPoint, Word), Publisher, Photoshop, Salesforce, Mailchimp
+ * **Technical:** R, Tablue, GaBi, Trimble GPS, ArcGIS, In-stream Survey Skills, Trail Construction
+ * **Leadership:** Volunteer Coordinator for MSGWT (2017), Futsal Coach for Boys & Girls Clubs of Venice (2018)

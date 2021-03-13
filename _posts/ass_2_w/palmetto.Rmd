@@ -1,0 +1,180 @@
+---
+title: "Logistic Regression"
+description: |
+  Logistic Regression on 2 species of Floridian Palmettos.
+author:
+  - name: Shelby Walsh
+date: 03-13-2021
+theme: style.css
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE, message = FALSE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(tidyr)
+library(lubridate)
+library(tsibble)
+library(feasts)
+library(GGally)
+library(broom)
+library(jtools)
+library(scales)
+library(kableExtra)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+```
+
+
+```{r, include = FALSE}
+#read in data
+palmetto <- read_csv("palmetto.csv", 
+                     col_types = cols(.default = 'c')) %>%
+  mutate(full_name = case_when(
+    species == '1' ~ 'Serenoa repens',
+    species == '2' ~ 'Sabal etonia'
+  )) %>% 
+  mutate(height = as.numeric(height)) %>% 
+  mutate(length = as.numeric(length)) %>% 
+  mutate(width = as.numeric(width)) %>% 
+  mutate(green_lvs = as.numeric(green_lvs)) 
+
+
+str(palmetto)
+
+palmetto <- palmetto %>% 
+  select(species, height, length, width, green_lvs, full_name)
+
+str(palmetto$species)
+
+palmetto$species <- as.factor(palmetto$species)
+
+```
+
+## Data Visualizations to explore Palmetto Species differences
+```{r, fig.cap= "**Figure 1.** Exploritory visualization to explore the differences in two dominant Palmetto species, Sabel etonia and Serenoa repens, based on height and canopy length."}
+palmetto_height <- ggplot(data = palmetto, aes(x = height, y = length)) +
+                            geom_point(aes(color = full_name)) +
+  scale_colour_manual(values = c("darkolivegreen4", "goldenrod2")) +
+  labs(x = "Height (cm)",
+       y = "Length (cm)", 
+       title = "Comparison of Canopy Height and Length of Two South-Central \nFlorida Palmetto Species, Sabel etonia and Serenoa repens") +
+  theme(legend.title = element_blank()) +
+  theme(plot.title = element_text(size = 12,
+                                   face = "bold",
+        hjust = 0.5))
+
+palmetto_height
+```
+- Height and length have a correlation with species
+
+```{r, fig.cap= "**Figure 2.** Exploritory visualization to explore the differences in two dominant Palmetto species, Sabel etonia and Serenoa repens, based on canopy width and green leaf observations."}
+palmetto_canopy <- ggplot(data = palmetto, aes(x = width, y = green_lvs)) +
+                            geom_point(aes(color = full_name))+
+  scale_colour_manual(values = c("darkolivegreen4", "goldenrod2"))+
+  labs(x = "Width (cm)",
+       y = "Green Leaf Count", 
+       title = "Comparison of Canopy Width and Green Leaf Count of Two South-Central \nFlorida Palmetto Species, Sabel etonia and Serenoa repens") +
+  theme(legend.title = element_blank()) +
+  theme(plot.title = element_text(size = 12,
+                                   face = "bold",
+        hjust = 0.5))
+
+
+palmetto_canopy
+```
+- There seems to be a difference between the 2 species based on green leaf count and width
+
+```{r, fig.cap= "**Figure 3.** Exploritory visualization to explore the two strongest differences in two dominant Palmetto species, Sabel etonia and Serenoa repens, based on height and green leaf observations."}
+palmetto_hg <- ggplot(data = palmetto, aes(x = green_lvs, y = height)) +
+                            geom_point(aes(color = full_name)) +
+  scale_colour_manual(values = c("darkolivegreen4", "goldenrod2"))+
+  labs(x = "Green Leaf Count",
+       y = "Height (cm)", 
+       title = "Comparison of Height and Green Leaf Count of Two South-Central \nFlorida Palmetto Species, Sabel etonia and Serenoa repens") +
+  theme(legend.title = element_blank()) +
+  theme(plot.title = element_text(size = 12,
+                                   face = "bold",
+        hjust = 0.5))
+
+
+palmetto_hg
+```
+- Green leaf count seem to be strong indicator for species
+
+## Binary Logistic Regression for Palmetto Species, Sabel etonia and Serenoa repens. 
+#### Specifically looking at the relationship between species identification and canopy height, length, width and green leaf observations.
+```{r}
+#running the regression and making a table
+palmetto_blr <- glm(species ~ height + length + width + green_lvs,
+                            data = palmetto,
+                            family = "binomial")
+
+#summary(palmetto_blr)
+
+blr_tidy <- broom::tidy(palmetto_blr)
+
+blr_tidy %>%
+kbl(caption = "**Table 1.** Palmetto Logistic Regression Results") %>%
+  kable_classic(full_width = F, html_font = "Cambria") %>% 
+  add_header_above(c( "Species" = 5))
+
+
+
+#ggplot(data = palmetto, aes(x = species, y = height)) +
+  #geom_jitter(aes(color = length)) +
+  #theme(legend.position = "none")
+```
+
+```{r}
+#creating a clean table and labels
+#clean_table <- tab_model(palmetto_blr)
+
+#clean_table
+```
+
+
+## Model Prediction and Classification
+#### Analyzing our regression model and looking at the accuracy of the predictions. Predictions are classified as correct when the probability is >0.5 of matching the orginal species.
+```{r}
+#predict species
+blr_fitted <- palmetto_blr %>% 
+ broom::augment(type.predict = "response") %>% 
+  mutate(predict_species = ifelse(.fitted >= 0.5, "Serenoa repens", "Sabal etonia"))
+
+#sort and predict species to find how often it is right
+blr_correct <- blr_fitted %>% 
+  mutate(species = case_when(species == 1 ~ "Serenoa repens",
+                             species == 2 ~ "Sabal etonia")) %>% 
+  mutate(correct = case_when(predict_species == species ~ "incorrect",
+                             TRUE ~ "correct")) %>% 
+  select(species, .fitted, predict_species, correct) %>% 
+ group_by(species, correct) %>% 
+  summarize(number_correct = n())
+
+#pivot to get table in tidy format
+blr_correct <- blr_correct %>% 
+  pivot_wider(names_from = correct,
+              values_from = number_correct)
+
+pretty_correct <- blr_correct %>% 
+  group_by(species) %>% 
+mutate(percent_correct = correct/(correct + incorrect)) %>% 
+  mutate(percent_correct = percent(percent_correct))
+
+pretty_correct <- pretty_correct %>% 
+  rename("Species" = species,
+         "Correct" = correct,
+         "Incorrect" = incorrect, 
+         "% Correct" = percent_correct)
+
+pretty_correct %>%
+kbl(caption = "**Table 2.** Predicted Palmetto Species Identification Results") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+

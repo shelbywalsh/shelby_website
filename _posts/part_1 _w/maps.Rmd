@@ -1,0 +1,90 @@
+---
+title: "Interactive Maps"
+description: |
+  Logistic Regression on 2 species of Floridian Palmettos.
+author:
+  - name: Shelby Walsh
+date: 03-13-2021
+theme: style.css
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE, message = FALSE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(sf)
+library(tmap)
+library(gstat)
+library(stars)
+```
+
+```{r}
+#read in oil spill data
+oil_spill <- read_sf("Oil_Spill_Incident_Tracking_shp", layer = "Oil_Spill_Incident_Tracking") %>% 
+  clean_names() %>% 
+  rename(county = localecoun)
+
+
+#check the refrence system
+#st_crs(oil_spill)
+
+#read in ca county boundaries
+
+ca_county <- read_sf("ca", layer = "CA_Counties_TIGER2016") %>% 
+  clean_names() %>% 
+  select(name)
+
+
+#st_crs(ca_county)
+
+#transform to match
+ca_county <- st_transform(ca_county, st_crs(oil_spill))
+```
+# California Oil Spills: 2008
+
+
+#### Let's look at the California oilspills recorded in 2008. These spills include inland and marine oil spills. Each red do represents a recorded oil spill.
+```{r}
+
+tmap_mode("view")
+
+#tm_shape(oil_spill) +
+  #tm_dots("county")
+
+#tm_shape(ca_county) +
+  #tm_fill("name", palette = "YlOrBr", show.legend = FALSE) +
+  #tm_shape(oil_spill) +
+  #tm_dots(aes(color = "darkred")) 
+
+```
+# Inland Oil Spills: 2008
+
+#### Now let's look at just inland oil spills per county in 2008. Los Angeles County had the most recorded oil spills, with over twice as many recorded events than any other county. Los Angeles had 370 events, while the next closest, San Mateo County, had 173 events. 
+```{r}
+#looking at inland spills counts per county
+inland <- oil_spill %>% 
+  filter(inlandmari == "Inland")
+
+ca_inland <- ca_county %>% 
+  st_join(inland)
+
+inland_spill <- ca_inland %>% 
+  count(county)
+ 
+
+ggplot(data = inland_spill) +
+  geom_sf(aes(fill = n), color = "white", size = 0.1) +
+  scale_fill_gradientn(colors = c("lightgray","darkorange","darkred")) +
+  theme_minimal() +
+  labs(fill = "Number of Oil Spills per County",
+       title = "2008 Inland California Oil Spills")
+```
+
+
+
+
+

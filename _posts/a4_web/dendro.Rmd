@@ -1,0 +1,81 @@
+---
+title: "Dendrogram Trials"
+description: |
+  Trying out different dendrograms.
+author:
+  - name: Shelby Walsh
+date: 03-13-2021
+theme: style.css
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(here)
+library(janitor)
+library(palmerpenguins)
+library(NbClust)
+library(cluster)
+library(factoextra)
+library(dendextend)
+library(ggdendro)
+library(ape)
+
+```
+
+
+#### A look into stream chemistry in the Santa Barbara Coastal drainage area. This analysis looks at 13 different sites and their relationships to one another.
+```{r}
+#read in data
+strem_chem <- read_csv("sbc_stream_chem.csv") 
+
+#change -999 to NA, summarise each site to get the mean values of each site
+stream_chem <- na_if(strem_chem, -999) %>% 
+  clean_names() %>% 
+  group_by(site_code) %>% 
+  select(-timestamp_local) %>% 
+  summarise_at(vars(nh4_u_m:spec_cond_u_spercm), mean, na.rm = TRUE)
+
+```
+
+
+```{r}
+#scale data
+stream_scaled <- stream_chem %>% 
+  select(nh4_u_m:spec_cond_u_spercm) %>% 
+  scale()
+
+#add back in site locations
+rownames(stream_scaled) <- stream_chem$site_code
+
+#calulate the euclidean distance from sites
+euc_distance <- dist(stream_scaled, method = "euclidean")
+```
+
+```{r}
+#perform complete linkage clustering
+stream_complete <- hclust(euc_distance, method = "complete" )
+
+stream_complete <- as.dendrogram(stream_complete)
+
+#plot dendrogram normal
+#plot(stream_complete, cex = 0.6, hang = -1)
+
+#create a fun fan dendrogram
+fan <- plot(as.phylo(stream_complete), type = "fan", main = "Santa Barbara Coastal Stream Chemistry Dendrogram") 
+
+sp <- stream_complete %>% 
+  set("branches_k_color", 
+             value = c("darkred", "darkblue", "darkgreen", "orange", "gold", "palegreen3"), k = 7) %>% 
+   plot(main = "Santa Barbara Coastal Stream Chemistry Dendrogram")
+```
+
+
